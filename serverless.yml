@@ -55,7 +55,7 @@ functions:
     iamRoleStatements:
       - Effect: 'Allow'
         Action:
-          - 'dynamodb:UpdateIem'
+          - 'dynamodb:UpdateItem'
         Resource: !GetAtt PostsTable.Arn
   deletePost:
     handler: api.deletePost
