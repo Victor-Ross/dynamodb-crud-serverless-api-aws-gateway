@@ -4,7 +4,7 @@ provider:
   name: aws
   runtime: nodejs14.x
   stage: dev
-  region: es-east-1
+  region: us-east-1
   environment:
     DYNAMODB_TABLE_NAME: ${self:custom.postsTableName}
 
@@ -84,7 +84,7 @@ functions:
       - Effect: 'Allow'
         Action:
           - 'dynamodb:Scan'
-        Resource: !GetAtt PostsTable
+        Resource: !GetAtt PostsTable.Arn
 
 resources:
   Resources:
