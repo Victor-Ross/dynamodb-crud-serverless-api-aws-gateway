@@ -1,0 +1,191 @@
+const db = require('./db');
+const {
+  GetItemCommand,
+  PutItemCommand,
+  DeleteItemCommand,
+  ScanCommand,
+  UpdateItemCommand,
+} = require('@aws-sdk/client-dynamodb');
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
+
+const getPost = async (event) => {
+  const response = { statusCode: 200 };
+
+  try {
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Key: marshall({ postId: event.pathParameters.postId }),
+    };
+    const { Item } = await db.send(new GetItemCommand(params));
+
+    response.body = JSON.stringify({
+      body: {
+        message: 'Successfully retrieved post.',
+        data: Item ? unmarshall(Item) : {},
+        rawData: Item,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: 'Failed to get Post',
+      errorMessage: error.message,
+      errorStack: error.stack,
+    });
+  }
+
+  return response;
+};
+
+const createPost = async (event) => {
+  const response = { statusCode: 200 };
+
+  try {
+    const body = JSON.parse(event.body);
+
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Item: marshall(body || {}),
+    };
+
+    const createResult = await db.send(new PutItemCommand(params));
+
+    response.body = JSON.stringify({
+      message: 'Successfully created Post',
+      createResult,
+    });
+  } catch (error) {
+    console.log(error);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: 'Failed to create Post',
+      errorMessage: error.message,
+      errorStack: error.stack,
+    });
+  }
+
+  return response;
+};
+
+const updatePost = async (event) => {
+  const response = { statusCode: 200 };
+
+  try {
+    const body = JSON.parse(event.body);
+
+    const objKeys = Object.keys(body);
+
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Key: marshall({ postId: event.pathParameters.postId }),
+      // UpdateExpression: "SET #attrName = :attrValue",
+      // ExpressionAttributeNames: {
+      //   "#attrName": "SessionId"
+      // },
+      // ExpressionAttributeValues: {
+      //   ":attrValue": {
+      //     "S": "some string"
+      //   }
+      // }
+      UpdateExpression: `SET ${objKeys.map(
+        (_, index) => `#key${index} = :value${index}`
+      )}`,
+      ExpressionAttributeNames: objKeys.reduce(
+        (acc, key, index) => ({
+          ...acc,
+          [`#key${index}`]: key,
+        }),
+        {}
+      ),
+      ExpressionAttributeValues: marshall(
+        objKeys.reduce(
+          (acc, key, index) => ({
+            ...acc,
+            [`:value${index}`]: body[key],
+          }),
+          {}
+        )
+      ),
+    };
+
+    const updateResult = await db.send(new UpdateItemCommand(params));
+
+    response.body = JSON.stringify({
+      message: 'Successfully updated Post',
+      updateResult,
+    });
+  } catch (error) {
+    console.log(error);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: 'Failed to update Post',
+      errorMessage: error.message,
+      errorStack: error.stack,
+    });
+  }
+
+  return response;
+};
+
+const deletePost = async (event) => {
+  const response = { statusCode: 200 };
+
+  try {
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Key: marshall({ postId: event.pathParameters.postId }),
+    };
+
+    const deleteResult = await db.send(new DeleteItemCommand(params));
+
+    response.body = JSON.stringify({
+      message: 'Successfully deleted Post',
+      deleteResult,
+    });
+  } catch (error) {
+    console.log(error);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: 'Failed to delete Post',
+      errorMessage: error.message,
+      errorStack: error.stack,
+    });
+  }
+
+  return response;
+};
+
+const getAllPosts = async (event) => {
+  const response = { statusCode: 200 };
+
+  try {
+    const { Items } = await db.send(
+      new ScanCommand({ TableName: process.env.DYNAMODB_TABLE_NAME })
+    );
+
+    response.body = JSON.stringify({
+      message: 'Successfully retrieved all Posts',
+      data: Items.map((item) => unmarshall(item)),
+      rawData: Items,
+    });
+  } catch (error) {
+    console.log(error);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: 'Failed to retrieve Posts',
+      errorMessage: error.message,
+      errorStack: error.stack,
+    });
+  }
+
+  return response;
+};
+
+module.exports = {
+  getPost,
+  createPost,
+  updatePost,
+  deletePost,
+  getAllPosts,
+};
