@@ -25,10 +25,10 @@ functions:
           path: post/{postId}
           method: GET
     iamRoleStatements:
-      - Effect: "Allow"
+      - Effect: 'Allow'
         Action:
-          - "dynamodb:GetItem"
-      Resource: !GetAtt PostsTable.Arn
+          - 'dynamodb:GetItem'
+        Resource: !GetAtt PostsTable.Arn
   createPost:
     handler: api.createPost
     name: create-post
@@ -39,24 +39,24 @@ functions:
           path: post
           method: POST
     iamRoleStatements:
-      - Effect: "Allow"
+      - Effect: 'Allow'
         Action:
-          - "dynamodb:PutItem"
-      Resource: !GetAtt PostsTable.Arn
+          - 'dynamodb:PutItem'
+        Resource: !GetAtt PostsTable.Arn
   updatePost:
     handler: api.updatePost
     name: update-post
     memorySize: 128
     timeout: 5
     events:
-     - http:
+      - http:
           path: post/{postId}
           method: PUT
     iamRoleStatements:
-      - Effect: "Allow"
+      - Effect: 'Allow'
         Action:
-          - "dynamodb:UpdateIem"
-      Resource: !GetAtt PostsTable.Arn
+          - 'dynamodb:UpdateIem'
+        Resource: !GetAtt PostsTable.Arn
   deletePost:
     handler: api.deletePost
     name: delete-post
@@ -67,9 +67,9 @@ functions:
           path: post/{postId}
           method: DELETE
     iamRoleStatements:
-      - Effect: "Allow"
+      - Effect: 'Allow'
         Action:
-          - "dynamodb:DeleteItem"
+          - 'dynamodb:DeleteItem'
         Resource: !GetAtt PostsTable.Arn
   getAllPosts:
     handler: api.getAllPosts
@@ -81,9 +81,9 @@ functions:
           path: posts
           method: GET
     iamRoleStatements:
-      - Effect: "Allow"
+      - Effect: 'Allow'
         Action:
-          - "dynamodb:Scan"
+          - 'dynamodb:Scan'
         Resource: !GetAtt PostsTable
 
 resources:
